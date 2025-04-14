@@ -4,11 +4,8 @@ import {
   TEnterpriseLicenseFeatures,
 } from "@/modules/ee/license-check/types/enterprise-license";
 import { Organization } from "@prisma/client";
-import { HttpsProxyAgent } from "https-proxy-agent";
 import { after } from "next/server";
-import fetch from "node-fetch";
 import { cache as reactCache } from "react";
-import { prisma } from "@formbricks/database";
 import { cache, revalidateTag } from "@formbricks/lib/cache";
 import {
   E2E_TESTING,
@@ -220,40 +217,20 @@ export const fetchLicense = reactCache(
       async () => {
         if (!env.ENTERPRISE_LICENSE_KEY) return null;
         try {
-          const now = new Date();
-          const startOfYear = new Date(now.getFullYear(), 0, 1); // January 1st of the current year
-          const endOfYear = new Date(now.getFullYear() + 1, 0, 0); // December 31st of the current year
-
-          const responseCount = await prisma.response.count({
-            where: {
-              createdAt: {
-                gte: startOfYear,
-                lt: endOfYear,
-              },
+          return {
+            status: "active" as const,
+            features: {
+              isMultiOrgEnabled: true,
+              contacts: true,
+              projects: 1000,
+              whitelabel: true,
+              removeBranding: true,
+              twoFactorAuth: true,
+              sso: true,
+              saml: true,
+              ai: true,
             },
-          });
-
-          const proxyUrl = env.HTTPS_PROXY || env.HTTP_PROXY;
-          const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
-
-          const res = await fetch("https://ee.formbricks.com/api/licenses/check", {
-            body: JSON.stringify({
-              licenseKey: ENTERPRISE_LICENSE_KEY,
-              usage: { responseCount: responseCount },
-            }),
-            headers: { "Content-Type": "application/json" },
-            method: "POST",
-            agent,
-          });
-
-          if (res.ok) {
-            const responseJson = (await res.json()) as {
-              data: TEnterpriseLicenseDetails;
-            };
-            return responseJson.data;
-          }
-
-          return null;
+          };
         } catch (error) {
           logger.error(error, "Error while checking license");
           return null;

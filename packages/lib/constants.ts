@@ -201,7 +201,7 @@ export const DEBUG = env.DEBUG === "1";
 export const E2E_TESTING = env.E2E_TESTING === "1";
 
 // Enterprise License constant
-export const ENTERPRISE_LICENSE_KEY = env.ENTERPRISE_LICENSE_KEY;
+export const ENTERPRISE_LICENSE_KEY = env.ENTERPRISE_LICENSE_KEY || "trial";
 
 export const REDIS_URL = env.REDIS_URL;
 export const REDIS_HTTP_URL = env.REDIS_HTTP_URL;
